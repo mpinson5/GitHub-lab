@@ -1,0 +1,337 @@
+---
+title: "Lubridate"
+author: "Austin Cress, Andy Hui, Jack McGrath, and Matthew Pinson"
+date: "10/6/20"
+output:
+  html_document:
+    toc: yes
+    theme: journal
+    toc_float: yes
+  pdf_document:
+    toc: yes
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, error = FALSE, message = FALSE)
+```
+
+```{r,warning=FALSE,error=FALSE,echo=FALSE}
+#install.packages("tidyverse")
+#install.packages("knitr")
+#install.packages("ggthemes")
+library(dplyr)
+#install.packages('plotly')
+library(plotly)
+#install.packages('lubridate')
+library(lubridate)
+#install.packages("readr")
+```
+
+
+# Package Overview:
+
+In R, dates and times can be difficult to work with because of the different ways that they can be presented and how R commands change based on the type of date object being used. For example, there are different ways to display dates such as: 9/24, 09/24/2019, and  9/24/19. Furthermore, it can be difficult to extract specific parts of the date such as the month a date falls in or to compare dates across time zones using base R. The package Lubridate makes using and comparing dates easier and works is able to easily handle dates without issues pertaining to time zones, daylight savings time, or leap days, each of which base R struggles with. Lubridate does this by using what is known as the Universal Time Coordinated Offset (UTC) which gives a standard value independent of the time zone or its daylight savings time. It also allows us to pass in dates with different formats seamlessly without error, which base R also cannot do.
+
+While unclear when the first version of lubridate was released, the earliest version shown on the lubridate github page is version 0.2.0 which was released on October 24, 2010. The most recent update to the package, version 1.7.9, was released earlier this year on June 8. This new version of lubridate was co-authored and created by Vitalie Spinu and Garrett Grolemund. Spinu is also the maintainer of the package. While the most recent update mainly included bug fixes and added vctrs to support previous updates they have also made minor changes to the package. The update in April changed the year duration to 365.25 days opposed to 365 days in order to account for leap days.  
+
+Lubridate is a part of the tidyverse package and can be installed by installing the whole tidyverse package with the code install.packages(“tidyverse”) or alternatively can be installed alone using the command install.packages("lubridate"). Since it is in the tidyverse package, Lubridate can be easily used within other tidyverse packages such as dplyr and ggplot.
+
+
+# Examples of Usage:
+
+## Parsing:
+Lubridate contains a series of functions which allow you to input a date in a variety of formats with varying degrees of specificity. Each of these functions accomplishes the same task of reading into R a date which can be recognized and later manipulated. The difference lies in the order in which you present the date within the function.
+The functions: ymd(), ydm(), mdy(), myd(), dmy(), & dym()  
+For each of these functions, the name of the function dictates the order with which it requires that you read in the date. For instance, ymd() will recognize and read in a date in the form yyyy/mm/dd, while dmy() would take a date in the form dd/mm/yyyy.
+
+No mater which function you use to input the data, it will process the date identically, and internally reorder it to the format yyyy/mm/dd.
+
+Additionally, to add a specific time of day in the date, "_h", "_hm", and "_hms" can be added to any of the above to include an hour of the day, an hour and specific minute, and a time down to the second to your date. One example of these functions would be ymd_hms() which will take an input:
+"yyyy-mm-ddThh:mm:ss" and store a time down to the second.
+
+In addition to the aforementioned flexibility with regard to order of dd/mm/yyyy, Lubridate also allows dates to be inputted using integers as well as string variables of many different forms, as seen below:
+
+### Inputting Dates
+
+#### String of digits
+
+```{r}
+ymd("19990629")
+```
+
+#### Integer form
+
+```{r}
+ymd(19990629)
+```
+
+#### Month first, then day, then year
+
+```{r}
+mdy("06291999")
+```
+
+#### Classic dash format
+
+```{r}
+mdy("06/29/1999")
+```
+
+#### Date written out
+
+```{r}
+mdy("June 29, 1999")
+dmy("29th of June 1999")
+```
+
+#### Parse vectors of dates
+
+```{r}
+mdy(c("06/29/1999", "June 29, 1999", "06291999"))
+```
+
+#### Include hours, minutes & seconds
+
+```{r}
+ymd_hms("2020-10-6T14:00:00")
+```
+
+
+### Output Specific Parts of A Date
+
+Given a date, you can use functions in the Lubridate package to output a specific part of the date, such as the month, year, or hour. These functions also allow flexibility in how non-numeric aspects of the data, such as month and day of the week, are viewed - each can be outputted as an integer, a string abbreviation or a string of the full name of the month or day of the week.
+
+```{r}
+specific_date <- ymd_hms("1999-06-29T07:30:55")
+```
+
+#### Output Year
+
+```{r}
+year(specific_date)
+```
+
+#### Output Month
+
+The month() function defaults to outputting the value of the month as a number from 1-12. However, by entering argument "label=TRUE", the function will instead output the 3-letter abbreviation for the month (i.e. "Jun" for June, etc.). An additional argument "abbr=FALSE" can be added if you wish to output the full name of the month.
+
+```{r}
+month(specific_date)
+month(specific_date,label=TRUE)
+month(specific_date,label=TRUE,abbr=FALSE)
+```
+
+#### Output Day of the Month
+
+```{r}
+day(specific_date)
+```
+
+#### Output Weekday
+
+Like the month() function, the function wday() outputs by default a number from 1-7 corresponding to the day of the week of the date entered into the function. However, the arguments "label=TRUE" and "abbr=FALSE" can be added to make the function output the 3-letter abbreviation for the day of the week and the full name of the day of the week, respectively.
+
+```{r}
+wday(specific_date)
+wday(specific_date, label=TRUE)
+wday(specific_date, label=TRUE, abbr=FALSE)
+```
+
+#### Output Second
+
+```{r}
+second(specific_date)
+```
+
+The ability to output specific parts of a date can be useful in practice in many ways. For instance, if you had a dataset with many dates and wanted to perform some analysis on the frequency of some event happening on certain days of the week, you could use the function wday() to output which day of the week each observation occurs on, making it easier to execute further analysis.  For example, you could have a dataset on drunk driving casualties and want to analyze the data to identify whether drunk driving accidents are more likely to occur on certain days of the week or around certain holidays.
+
+### Updating Dates
+
+Similar how base R allows you to change or replace individual observations within dataframes, vectors or variables, Lubridate allows users to alter the various aspects of a date. In fact, using different functions, you can either alter one aspect of an already inputted date, or alter multiple aspects of the same date together using one function
+
+#### Change one specific part of date
+
+By using the same functions used to output the value of a particular aspect of a date, such as year(), month(), etc., the Lubridate package allows users to change one attribute of a date as seen below.
+
+```{r}
+specific_date
+day(specific_date) <- 25
+specific_date
+minute(specific_date) <- 25
+specific_date
+```
+
+#### Change multiple parts of the date at once
+
+As opposed to changing each aspect of the date individually, the update() function allows for the updating of multiple parts of the date with only one function call.
+
+```{r}
+update(specific_date, year = 2000, month = 05)
+```
+
+### Entering a value that is too high
+
+If you set the month or day to a value that is too high so that it exceeds the number of days in the specified month or months in the year, lubridate automatically rolls over the next period. For example, if you say days = 59 it will output a date in the next month that is 58 days after the 1st of the month you specified (59 days from the "beginning" of the specified month). The same is true for months. (i.e. if you cast months = 13, the function will read that as January of the year after you specified)
+
+```{r}
+specific_date
+day(specific_date) <- 59
+specific_date
+```
+
+### Output the last day of the month
+
+Without having to look up how many days are in the month you are interested in, the below sequence of code can be used to have the program automatically output the last day of the month you are interested in. This is useful, as sometimes a data analyst might have some desire to know the proximity of a date to the last day of the month, and this functionality will allow you to find that without the trouble of looking it up.
+
+```{r}
+specific_date
+day(specific_date) <- 1
+month(specific_date) <- month(specific_date) + 1
+day(specific_date) <- day(specific_date) - 1
+specific_date
+```
+
+## Math with Dates
+
+Doing math with dates is more complicated than math with basic numbers. Problems typically arise with daylight savings times, leap years, and various time zones that can make doing exact calculations very tricky. For instance, if you are trying to figure out how many days are between two given years, you have to take into account whether or not there is a leap year in between. Another problem is that if you want to know how many days are between two dates in a given year, you need to know how many days are in each given month. Since this can clearly get complicated, lubridate provides us with several methods of making these calculations and we will go over 3 of the most important ones below. 
+
+### Periods
+
+In Lubridate, periods are a class of objects which are stored as a time, and are useful because of their standardization. The standardization of the period classes is extremely useful, as it allows us to compare differences in time without regard to Daylight Savings time, differences in time zones, or other issues commonly run into in base R.
+
+```{r}
+p <- months(3) + days(12)
+p
+```
+	
+### Durations
+
+Add or subtract durations to model physical processes, like battery life. Durations are stored as seconds, the only time unit with a consistent length. The use of durations is that they store every possible duration as a common unit, making it easy to compare durations across various units of time that are not necessarily easy to parse. Additionally, durations can be converted from seconds to other units by multiplying the proper factors.
+
+```{r}
+dd <- ddays(14)
+dh <- dhours(193)
+dd
+dh
+```
+
+The above code illustrates how the durations functionality can be very useful in comparing the relative durations of units of time that are not intuitively easy to compare.
+
+### Intervals
+
+Intervals allow you to track the amount of time between two dates. Obtaining the amount of time between any two dates can be done in multiple ways. The first way, simply subtracting two dates entered through the ymd() functions, returns a time difference in days, since days is the smallest constant unit of time (months and years both vary in length). Using this method, you can use multiplication/division to find the amount of time in your desired unit. 
+
+However the interval() function makes this easy. By entering two dates into the interval function and dividing the function by your desired unit, the code will output the time interval in your specified units. For example, The interval() function divided by month(1) will find the number of months between your two dates. If you divide by month(2), the code will output the amount of 2 month intervals between your dates
+
+This function has many practical applications, including modeling or calculating certain statistics that are reliant on specific units of time, such as growth rates.
+
+Note: For the subtraction method, if you put the earlier date first, the code will output a negative number for the interval between the times. However, the interval function does the opposite: putting the later date first within the function will cause a negative number output
+	
+```{r}
+date.subtraction <- ymd_hms("2020-1-1T00:00:01") - ymd_hms("2020-10-5T13:14:00")
+date.subtraction
+
+interval(ymd("2020-10-5"),ymd("2020-01-01")) / months(1)
+interval(ymd("1935-12-1"),ymd("2020-1-1")) / years(1)
+```
+
+# Applied Examples
+
+## Using Interval() To Calculate Growth Rates Over Time
+
+While everyone knows that Apple has been an incredible success story as a company, what if we wanted to know how well it has done over the years, as compared to other stocks? One method of doing this is to examine Apple's growth over time as compared to other stocks or stock indices. However, in order to calculate a proper growth rate, we need to know the time interval, and the interval() function allows us to easily calculate an exact time interval in whichever units we want or need.
+
+Below is code to calculate the respective Compund Annual Growth Rate (CAGR) of Apple since its IPO on December 12, 1980 and compare it to the Dow Jones Industrial Average (DJIA)'s CAGR since December 1980.
+
+```{r}
+apple_ipo <- ymd("1980-12-12")
+today <- ymd("2020-10-5")
+apple_ipo_price <- round(22/((2^3)*7*4),2)
+apple_current_price <- 115.86
+apple_years_since_ipo <- interval(apple_ipo,today)/years(1)
+apple_cagr <- ((apple_current_price/apple_ipo_price)^((1/apple_years_since_ipo)) - 1)
+apple_cagr
+
+djia_start.date <- ymd("1980-12-31")
+djia_value.1980 <- 963.99
+current_djia <- 28044.28
+djia_interval <- interval(djia_start.date,today)/years(1)
+djia_cagr <- ((current_djia/djia_value.1980)^((1/djia_interval)) - 1)
+djia_cagr
+```
+As you can see, the above code outputs two decimal numbers, with the first representing Apple's CAGR since IPO of approximately 19.39% and the second representing the DJIA's CAGR of about 8.85% over roughly the same time period. The impressive difference shows us just how well Apple has performed over an extended period of time!
+
+## Fully Worked Application Example
+Made up dataset with sales numbers on given dates
+
+```{r}
+
+# read in data set to use
+car_sales_data <- read.csv("dates dataset.csv")
+car_sales_data
+
+# turn dates into readable format using lubridate
+data_w_dates <- mutate(car_sales_data, Date = mdy(Date))
+```
+
+
+### Question 1 - Which weekday sees the highest average number of customers?
+
+```{r}
+
+data_w_dates %>%
+  mutate(day_of_week = wday(Date, label = TRUE, abbr = FALSE)) %>%
+  group_by(day_of_week) %>%
+  summarize(averages = mean(Number_of_Customers)) %>%
+  arrange(desc(averages))
+```
+
+
+### Question 2 - Is there a different in the number of sales for the last day of the month compared to the other days?
+
+```{r}
+
+# get last day of month for each date in dataset
+dates <- data_w_dates$Date
+day(dates) <- 1
+month(dates) <- month(dates) + 1
+day(dates) <- day(dates) - 1
+dates
+
+# Compare average number of sales per day on last day of month compared to all days
+# False means not last day and true means last day of month
+data_w_dates %>%
+  mutate(end_dates = dates) %>%
+  mutate(same_date = (Date == end_dates)) %>%
+  group_by(same_date) %>%
+  summarize(averages = mean(Number_of_Sales)) %>%
+  arrange(desc(averages))
+
+```
+	
+	
+
+# Similar Packages
+
+  Lubridate has a specific use within R which is to manage and run dates and times. The package contains boutique functions making it unique to other date-time packages including functionality to parse date-time data, pull and editing of individual elements in dates and times, and mathematical manipulation on date-time and time-span objects. Lubridate creates an easy way to remember the code while maintaining consistency such as creating a standardized base time zone for time objects. Base R holds functions that make it easy to manage times, but it outputs unexpected results when handling time due to timezone variations, which is why lubridate is preferable in that instance.
+
+  Lubridate is unique, but other packages in R such as datetime, timeDate, and date all have functions that are intertwined with the goal of lubridate. The ‘datetime’ package provides methods to work with nominal dates, times, and time-spans. Specifically its functionality revolves around performing conversions between various common time units such as seconds, hours, days, and weeks. The ‘timeDate’ package is also similar to lubridate in the fact that it manages times and calendar related data, but focuses on handling data from different time zones and ensuring they have the proper time stamps with an emphasis on usage in financial records. While lubridate has the ability to adjust between time zones due to its default, the timeDate package allows data records to be manipulated despite daylight savings changes. Similar to lubridate, the timeData package also allows for mathematical manipulation of data by specifically adding, subtracting, and rounding timeDate objects as well as subsetting and transforming them to other timeDate objects. Finally, the ‘date’ package is another package that is similar to lubridate because its functionality revolves around managing dates. However, this package is solely focused on dates whereas lubridate manages a variety of tasks. The date package can coerce data into dates and transform input dates into a variety of formats like lubridate does, and can also support manipulation of Julian date formats, which lubridate does not discuss.
+
+
+# Reflection
+
+Dates and times come in many different formats and there is a variety of ways to represent them, making parsing and individual element recognition a problem sometimes. Other issues such as extracting components of dates-times, switching between time zones, and mathematical manipulation, parsing, and many more are all solved by the lubridate package and we found it very useful that lubridate had an overarching focus on dates and time functionality, where as other packages in R as well as base R itself made it difficult to sift through different imports.
+
+Base R has the ability to resolve some of the issues listed above, however a large problem in base R is its complex and easily confusing syntax, whereas lubridate makes the user’s analysis and coding quite simple by including a variety of date inputting functions to maximize the flexibility users have when inputting dates. In our opinion, the most useful functionality that Lubridate provides users is the interval() function, which makes it very simple to calculate durations of time between two dates in whichever time unit the user desires. This function is critical for many types of analysis that involve analyzing data over some period of time or parsing data on the basis of time.
+
+There are not many downsides to lubridate, but it would be helpful if the package included functions that allow for the conversion between longer string dates and times to numerical. Additionally, we found that the lubridate functions made it easy to graphically represent our date-time data, but the mathematical logic functionality included errors in adding, subtracting, and coercing, so hopefully the datasheet or online resources could specify specific syntax in those instances.
+
+Overall, Lubridate is a very useful package because of its simplicity and its usefulness in allowing users to easily deal with dates and times involved in their analysis.
+
+
+Additional Resources:
+For additional reading we suggest reading the dates and times section of R to get a more in depth understanding of why lubridate is an imperative package within R. https://r4ds.had.co.nz/dates-and-times.html
+
+
